@@ -1,2 +1,6 @@
 [deploy]
 startCommand = "chmod +x ./railway/start.sh && ./railway/start.sh"
+
+[deploy.limitOverride.containers]
+cpu = 0.25
+memoryBytes = 268435456
