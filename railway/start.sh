@@ -24,6 +24,7 @@ case "${RAILWAY_SERVICE_NAME}" in
     ;;
   *)
     run_migrations
+    php artisan config:cache
     exec /start-container.sh
     ;;
 esac
