@@ -1,5 +1,7 @@
 [deploy]
-startCommand = "chmod +x ./railway/start.sh && ./railway/start.sh"
+startCommand = "php artisan rdw:sync-registrations"
+cronSchedule = "*/15 * * * *"
+restartPolicyType = "NEVER"
 
 [deploy.limitOverride.containers]
 cpu = 0.25
