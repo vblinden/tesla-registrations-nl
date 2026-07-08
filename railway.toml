@@ -1,3 +1,2 @@
 [deploy]
-preDeployCommand = ["php artisan migrate --force"]
 startCommand = "chmod +x ./railway/start.sh && ./railway/start.sh"
