@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { ColorStackedChart, MarketComparisonChart, ModelLineChart } from '../Components/RegistrationCharts';
 import AppLayout from '../Layouts/AppLayout';
@@ -87,7 +86,6 @@ export default function Dashboard({
 
     return (
         <AppLayout>
-            <Head title="Dashboard" />
 
             <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
@@ -117,12 +115,6 @@ export default function Dashboard({
                 <StatCard
                     label="Tesla marktaandeel (14 dagen)"
                     value={formatPercent(summary.marketShare)}
-                    suffix="%"
-                />
-                <StatCard label="Vandaag NL personenauto's" value={summary.todayNl} />
-                <StatCard
-                    label="Vandaag Tesla marktaandeel"
-                    value={formatPercent(summary.todayMarketShare)}
                     suffix="%"
                 />
             </div>

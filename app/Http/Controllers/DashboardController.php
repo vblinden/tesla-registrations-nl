@@ -83,7 +83,6 @@ class DashboardController extends Controller
 
         $totalNl = $nationalTotals->values()->sum('total_count');
         $totalTesla = $registrations->sum('count');
-        $todayNl = $nationalTotals->get($to->toDateString())?->total_count ?? 0;
 
         $summary = [
             'total' => $totalTesla,
@@ -93,15 +92,6 @@ class DashboardController extends Controller
             'model3' => $registrations->where('model', 'MODEL 3')->sum('count'),
             'modelS' => $registrations->where('model', 'MODEL S')->sum('count'),
             'modelX' => $registrations->where('model', 'MODEL X')->sum('count'),
-            'today' => $teslaByDate->get($to->toDateString(), 0),
-            'todayNl' => $todayNl,
-            'todayMarketShare' => $todayNl > 0
-                ? round(($teslaByDate->get($to->toDateString(), 0) / $todayNl) * 100, 1)
-                : 0,
-            'todayModelY' => $registrations
-                ->filter(fn ($r) => $r->registration_date->toDateString() === $to->toDateString())
-                ->where('model', 'MODEL Y')
-                ->sum('count'),
         ];
 
         return Inertia::render('Dashboard', [

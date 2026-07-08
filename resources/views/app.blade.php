@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title inertia>{{ config('app.name', 'Tesla NL') }}</title>
+        <title inertia>Tesla NL Registraties</title>
         <script>
             (() => {
                 const stored = localStorage.getItem('theme') ?? 'system';
