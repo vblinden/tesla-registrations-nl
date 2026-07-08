@@ -19,7 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('rdw:sync-registrations')->everyFifteenMinutes();
+        $schedule->command('rdw:sync-registrations')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
