@@ -12,7 +12,7 @@ import {
     YAxis,
 } from 'recharts';
 import { useChartTheme } from '../lib/chartTheme';
-import { getColorHex, MODEL_COLORS, formatNumber, formatPercent } from '../lib/chartUtils';
+import { getColorHex, MODEL_COLORS, getVariantHex } from '../lib/chartUtils';
 
 function ChartTooltip({ active, payload, label, chartTheme }) {
     if (!active || !payload?.length) {
@@ -58,7 +58,7 @@ function ChartTooltip({ active, payload, label, chartTheme }) {
     );
 }
 
-export function ColorStackedChart({ data, colors, title, subtitle }) {
+export function ColorStackedChart({ data, colors, title, subtitle, colorFor = getColorHex }) {
     const chartTheme = useChartTheme();
     const activeColors = colors.filter((color) => data.some((day) => day[color] > 0));
 
@@ -97,7 +97,7 @@ export function ColorStackedChart({ data, colors, title, subtitle }) {
                                 key={color}
                                 dataKey={color}
                                 stackId="colors"
-                                fill={getColorHex(color)}
+                                fill={colorFor(color)}
                                 radius={color === activeColors[activeColors.length - 1] ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                             />
                         ))}
@@ -106,6 +106,10 @@ export function ColorStackedChart({ data, colors, title, subtitle }) {
             </div>
         </div>
     );
+}
+
+export function VariantStackedChart(props) {
+    return <ColorStackedChart {...props} colorFor={getVariantHex} />;
 }
 
 export function ModelLineChart({ dailyByModel, models }) {

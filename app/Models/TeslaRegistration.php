@@ -10,6 +10,7 @@ class TeslaRegistration extends Model
         'registration_date',
         'model',
         'color',
+        'variant',
         'count',
     ];
 

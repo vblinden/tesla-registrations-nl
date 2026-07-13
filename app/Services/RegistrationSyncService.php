@@ -73,19 +73,20 @@ class RegistrationSyncService
     }
 
     /**
-     * @param  list<array{registration_date: string, model: string, color: string, count: int}>  $records
-     * @return list<array{registration_date: string, model: string, color: string, count: int}>
+     * @param  list<array{registration_date: string, model: string, color: string, variant: string, count: int}>  $records
+     * @return list<array{registration_date: string, model: string, color: string, variant: string, count: int}>
      */
     private function aggregateRecords(array $records): array
     {
         $grouped = [];
 
         foreach ($records as $record) {
-            $key = "{$record['registration_date']}|{$record['model']}|{$record['color']}";
+            $key = "{$record['registration_date']}|{$record['model']}|{$record['color']}|{$record['variant']}";
             $grouped[$key] = [
                 'registration_date' => $record['registration_date'],
                 'model' => $record['model'],
                 'color' => $record['color'],
+                'variant' => $record['variant'],
                 'count' => ($grouped[$key]['count'] ?? 0) + $record['count'],
             ];
         }

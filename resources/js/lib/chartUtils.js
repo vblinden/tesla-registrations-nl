@@ -55,6 +55,23 @@ export function getColorHex(color) {
     return COLOR_MAP[color] ?? '#94a3b8';
 }
 
+export const VARIANT_COLORS = {
+    'Long Range AWD': '#e82127',
+    'Long Range RWD': '#f97316',
+    'Standard RWD': '#3b82f6',
+    'Standard Range RWD': '#60a5fa',
+    AWD: '#7c3aed',
+    RWD: '#14b8a6',
+    Performance: '#171717',
+    'Performance AWD': '#525252',
+    Plaid: '#a855f7',
+    Onbekend: '#94a3b8',
+};
+
+export function getVariantHex(variant) {
+    return VARIANT_COLORS[variant] ?? '#94a3b8';
+}
+
 export function formatNumber(value) {
     return new Intl.NumberFormat('nl-NL').format(value);
 }

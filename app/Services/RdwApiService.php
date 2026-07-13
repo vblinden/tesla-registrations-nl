@@ -30,7 +30,7 @@ class RdwApiService
     }
 
     /**
-     * @return list<array{registration_date: string, model: string, color: string, count: int}>
+     * @return list<array{registration_date: string, model: string, color: string, variant: string, count: int}>
      */
     public function fetchAggregatedRegistrations(Carbon $from, Carbon $to): array
     {
@@ -39,9 +39,9 @@ class RdwApiService
 
         $response = Http::timeout(120)
             ->get(self::BASE_URL, [
-                '$select' => 'datum_tenaamstelling, handelsbenaming, eerste_kleur, count(*)',
+                '$select' => 'datum_tenaamstelling, handelsbenaming, eerste_kleur, variant, count(*)',
                 '$where' => "merk = 'TESLA' AND datum_tenaamstelling >= '{$fromDate}' AND datum_tenaamstelling <= '{$toDate}'",
-                '$group' => 'datum_tenaamstelling, handelsbenaming, eerste_kleur',
+                '$group' => 'datum_tenaamstelling, handelsbenaming, eerste_kleur, variant',
                 '$order' => 'datum_tenaamstelling ASC',
                 '$limit' => 10000,
             ]);
@@ -57,10 +57,14 @@ class RdwApiService
                 continue;
             }
 
+            $tradeName = $row['handelsbenaming'] ?? 'ONBEKEND';
+            $variantCode = $row['variant'] ?? '';
+
             $records[] = [
                 'registration_date' => Carbon::createFromFormat('Ymd', $row['datum_tenaamstelling'])->toDateString(),
-                'model' => $this->normalizeModel($row['handelsbenaming'] ?? 'ONBEKEND'),
+                'model' => $this->normalizeModel($tradeName),
                 'color' => strtoupper(trim($row['eerste_kleur'] ?? 'ONBEKEND')),
+                'variant' => $this->normalizeVariant($variantCode, $tradeName),
                 'count' => (int) ($row['count'] ?? 0),
             ];
         }
@@ -118,5 +122,90 @@ class RdwApiService
             str_contains($normalized, 'ROADSTER') => 'ROADSTER',
             default => $normalized,
         };
+    }
+
+    public function normalizeVariant(string $variant, string $handelsbenaming = ''): string
+    {
+        $variant = strtoupper(trim($variant));
+        $tradeName = strtoupper(trim($handelsbenaming));
+
+        if (str_contains($tradeName, 'LONG RANGE') && (str_contains($tradeName, 'AWD') || str_contains($tradeName, 'DUAL'))) {
+            return 'Long Range AWD';
+        }
+
+        if (str_contains($tradeName, 'LONG RANGE')) {
+            return 'Long Range RWD';
+        }
+
+        if (str_contains($tradeName, 'PERFORMANCE')) {
+            return 'Performance';
+        }
+
+        if (str_contains($tradeName, 'DUAL MOTOR') || str_contains($tradeName, 'AWD')) {
+            return 'AWD';
+        }
+
+        if ($variant === '' || $variant === 'N/A') {
+            return 'Onbekend';
+        }
+
+        if ($variant === '100X') {
+            return 'Plaid';
+        }
+
+        if (str_contains($variant, 'P100D')) {
+            return 'Performance';
+        }
+
+        if ($variant === '100D' || $variant === '75D') {
+            return 'Long Range AWD';
+        }
+
+        if ($variant === '90D') {
+            return 'Performance AWD';
+        }
+
+        if ($variant === '75R') {
+            return 'Standard Range RWD';
+        }
+
+        if ($variant === '75X') {
+            return 'AWD';
+        }
+
+        if (str_starts_with($variant, 'E') && str_ends_with($variant, 'D')) {
+            return 'Long Range AWD';
+        }
+
+        if (str_starts_with($variant, 'E') && str_ends_with($variant, 'LR')) {
+            return 'Long Range RWD';
+        }
+
+        if (str_starts_with($variant, 'H') && preg_match('/(?:MD|LD|CD)$/', $variant)) {
+            return 'Long Range AWD';
+        }
+
+        $drive = null;
+        $range = null;
+
+        if (preg_match('/(?:MD|LD|CD)$/', $variant) || preg_match('/D$/', $variant)) {
+            $drive = 'AWD';
+        } elseif (preg_match('/(?:LR|MR|CR|LN)$/', $variant) || preg_match('/R$/', $variant)) {
+            $drive = 'RWD';
+        }
+
+        if (preg_match('/(?:LR|LD)$/', $variant) || str_contains($variant, '8LR')) {
+            $range = 'Long Range';
+        } elseif (preg_match('/MR$/', $variant)) {
+            $range = 'Standard';
+        }
+
+        if ($drive === 'AWD' && preg_match('/(?:MD|LD)$/', $variant)) {
+            $range = 'Long Range';
+        }
+
+        $parts = array_values(array_filter([$range, $drive]));
+
+        return $parts !== [] ? implode(' ', $parts) : $variant;
     }
 }

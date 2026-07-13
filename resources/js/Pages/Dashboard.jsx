@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ColorStackedChart, MarketComparisonChart, ModelLineChart } from '../Components/RegistrationCharts';
+import { ColorStackedChart, MarketComparisonChart, ModelLineChart, VariantStackedChart } from '../Components/RegistrationCharts';
 import AppLayout from '../Layouts/AppLayout';
 import { formatDateTime, formatNumber, formatPercent, TRACKED_MODELS } from '../lib/chartUtils';
 
@@ -17,6 +17,32 @@ function StatCard({ label, value, accent = false, suffix = '' }) {
                 {typeof value === 'number' ? formatNumber(value) : value}
                 {suffix}
             </p>
+        </div>
+    );
+}
+
+function ChartModeButtons({ active, onChange }) {
+    const options = [
+        { id: 'color', label: 'Kleur' },
+        { id: 'variant', label: 'Uitvoering' },
+    ];
+
+    return (
+        <div className="flex flex-wrap gap-2">
+            {options.map((option) => (
+                <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => onChange(option.id)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        active === option.id
+                            ? 'bg-foreground text-background'
+                            : 'bg-foreground/5 text-muted hover:bg-foreground/10 hover:text-foreground'
+                    }`}
+                >
+                    {option.label}
+                </button>
+            ))}
         </div>
     );
 }
@@ -48,10 +74,14 @@ function ModelFilterButtons({ active, onChange, includeAll = false }) {
 
 export default function Dashboard({
     dailyAll,
+    dailyAllByVariant,
     dailyByModelDetail,
+    dailyByModelVariant,
     dailyByModel,
     dailyMarket,
     colors,
+    variants,
+    variantSummary,
     models,
     summary,
     lastSyncedAt,
@@ -60,29 +90,49 @@ export default function Dashboard({
 }) {
     const [activeView, setActiveView] = useState('MODEL Y');
     const [activeTableModel, setActiveTableModel] = useState('MODEL Y');
+    const [chartMode, setChartMode] = useState('variant');
+
+    const isVariantMode = chartMode === 'variant';
 
     const chartViews = {
         all: {
-            data: dailyAll,
+            data: isVariantMode ? dailyAllByVariant : dailyAll,
+            segments: isVariantMode ? variants : colors,
             title: 'Alle Tesla registraties',
-            subtitle: 'Alle Tesla-modellen gecombineerd, uitgesplitst naar kleur',
+            subtitle: isVariantMode
+                ? 'Alle Tesla-modellen gecombineerd, uitgesplitst naar uitvoering'
+                : 'Alle Tesla-modellen gecombineerd, uitgesplitst naar kleur',
         },
         ...Object.fromEntries(
             TRACKED_MODELS.map((model) => [
                 model.id,
                 {
-                    data: dailyByModelDetail[model.id] ?? [],
+                    data: isVariantMode
+                        ? (dailyByModelVariant[model.id] ?? [])
+                        : (dailyByModelDetail[model.id] ?? []),
+                    segments: isVariantMode
+                        ? Object.keys(variantSummary[model.id] ?? {})
+                        : colors,
                     title: `${model.label} registraties`,
-                    subtitle: 'Nieuwe kentekens per dag, uitgesplitst naar kleur',
+                    subtitle: isVariantMode
+                        ? 'Nieuwe kentekens per dag, uitgesplitst naar uitvoering (AWD/RWD/Long Range)'
+                        : 'Nieuwe kentekens per dag, uitgesplitst naar kleur',
                 },
             ]),
         ),
     };
 
-    const { data: chartData, title: chartTitle, subtitle: chartSubtitle } = chartViews[activeView];
-    const tableData = dailyByModelDetail[activeTableModel] ?? [];
+    const { data: chartData, segments: chartSegments, title: chartTitle, subtitle: chartSubtitle } =
+        chartViews[activeView];
+    const tableData = isVariantMode
+        ? (dailyByModelVariant[activeTableModel] ?? [])
+        : (dailyByModelDetail[activeTableModel] ?? []);
     const tableModel = TRACKED_MODELS.find((model) => model.id === activeTableModel);
-    const tableColors = colors.filter((color) => tableData.some((day) => day[color] > 0));
+    const tableSegments = isVariantMode
+        ? Object.keys(variantSummary[activeTableModel] ?? {})
+        : colors.filter((color) => tableData.some((day) => day[color] > 0));
+    const activeVariantSummary = variantSummary[activeTableModel] ?? {};
+    const ChartComponent = isVariantMode ? VariantStackedChart : ColorStackedChart;
 
     return (
         <AppLayout>
@@ -126,14 +176,15 @@ export default function Dashboard({
                 <StatCard label="Model X (14 dagen)" value={summary.modelX} />
             </div>
 
-            <div className="mb-6">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <ModelFilterButtons active={activeView} onChange={setActiveView} includeAll />
+                <ChartModeButtons active={chartMode} onChange={setChartMode} />
             </div>
 
             <div className="grid gap-6 xl:grid-cols-2">
-                <ColorStackedChart
+                <ChartComponent
                     data={chartData}
-                    colors={colors}
+                    colors={chartSegments}
                     title={chartTitle}
                     subtitle={chartSubtitle}
                 />
@@ -146,7 +197,21 @@ export default function Dashboard({
 
             <div className="mt-6 rounded-2xl border border-border bg-surface p-6">
                 <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <h2 className="text-lg font-semibold text-foreground">Registraties per dag</h2>
+                    <div>
+                        <h2 className="text-lg font-semibold text-foreground">Registraties per dag</h2>
+                        {isVariantMode && Object.keys(activeVariantSummary).length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {Object.entries(activeVariantSummary).map(([variant, count]) => (
+                                    <span
+                                        key={variant}
+                                        className="rounded-full border border-border bg-foreground/5 px-3 py-1 text-xs text-muted"
+                                    >
+                                        {variant}: <span className="font-medium text-foreground">{formatNumber(count)}</span>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     <ModelFilterButtons active={activeTableModel} onChange={setActiveTableModel} />
                 </div>
                 <div className="overflow-x-auto">
@@ -155,9 +220,9 @@ export default function Dashboard({
                             <tr className="border-b border-border text-muted">
                                 <th className="pb-3 pr-4 font-medium">Datum</th>
                                 <th className="pb-3 pr-4 font-medium">Totaal</th>
-                                {tableColors.map((color) => (
-                                    <th key={color} className="pb-3 pr-4 font-medium">
-                                        {color}
+                                {tableSegments.map((segment) => (
+                                    <th key={segment} className="pb-3 pr-4 font-medium">
+                                        {segment}
                                     </th>
                                 ))}
                             </tr>
@@ -169,9 +234,9 @@ export default function Dashboard({
                                     <td className={`py-3 pr-4 font-semibold ${tableModel?.totalClass ?? 'text-foreground'}`}>
                                         {day.total}
                                     </td>
-                                    {tableColors.map((color) => (
-                                        <td key={color} className="py-3 pr-4">
-                                            {day[color] || '—'}
+                                    {tableSegments.map((segment) => (
+                                        <td key={segment} className="py-3 pr-4">
+                                            {day[segment] || '—'}
                                         </td>
                                     ))}
                                 </tr>

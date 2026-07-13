@@ -11,6 +11,7 @@ it('renders the dashboard', function () {
         'registration_date' => now()->toDateString(),
         'model' => 'MODEL Y',
         'color' => 'WIT',
+        'variant' => 'Long Range AWD',
         'count' => 5,
     ]);
 
@@ -25,7 +26,10 @@ it('renders the dashboard', function () {
     $response->assertInertia(fn ($page) => $page
         ->component('Dashboard')
         ->has('dailyAll')
+        ->has('dailyAllByVariant')
         ->has('dailyByModelDetail')
+        ->has('dailyByModelVariant')
+        ->has('variantSummary')
         ->has('dailyMarket', 14)
         ->has('summary')
     );
