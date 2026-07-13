@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\DailyRegistrationTotal;
 use App\Models\TeslaRegistration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -13,11 +12,6 @@ it('renders the dashboard', function () {
         'color' => 'WIT',
         'variant' => 'Long Range AWD',
         'count' => 5,
-    ]);
-
-    DailyRegistrationTotal::query()->create([
-        'registration_date' => now()->toDateString(),
-        'total_count' => 1000,
     ]);
 
     $response = $this->get('/');

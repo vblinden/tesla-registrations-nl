@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DailyRegistrationTotal;
 use App\Models\TeslaRegistration;
 use App\Services\SyncMetadataService;
 use Carbon\Carbon;
@@ -27,12 +26,6 @@ class DashboardController extends Controller
             ->whereBetween('registration_date', [$from->toDateString(), $to->toDateString()])
             ->orderBy('registration_date')
             ->get();
-
-        $nationalTotals = DailyRegistrationTotal::query()
-            ->whereBetween('registration_date', [$from->toDateString(), $to->toDateString()])
-            ->orderBy('registration_date')
-            ->get()
-            ->keyBy(fn ($record) => $record->registration_date->toDateString());
 
         $colors = $registrations->pluck('color')->unique()->sort()->values()->all();
         $variants = $registrations->pluck('variant')->unique()->sort()->values()->all();
@@ -84,13 +77,7 @@ class DashboardController extends Controller
             ];
         })->all();
 
-        $totalNl = $nationalTotals->values()->sum('total_count');
-        $totalTesla = $registrations->sum('count');
-
         $summary = [
-            'total' => $totalTesla,
-            'totalNl' => $totalNl,
-            'marketShare' => $totalNl > 0 ? round(($totalTesla / $totalNl) * 100, 1) : 0,
             'modelY' => $registrations->where('model', 'MODEL Y')->sum('count'),
             'model3' => $registrations->where('model', 'MODEL 3')->sum('count'),
             'modelS' => $registrations->where('model', 'MODEL S')->sum('count'),

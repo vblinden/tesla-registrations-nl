@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ColorStackedChart, ModelLineChart, VariantStackedChart } from '../Components/RegistrationCharts';
 import AppLayout from '../Layouts/AppLayout';
-import { formatDateTime, formatNumber, formatPercent, TRACKED_MODELS } from '../lib/chartUtils';
+import { formatDateTime, formatNumber, TRACKED_MODELS } from '../lib/chartUtils';
 
 function StatCard({ label, value, accent = false, suffix = '' }) {
     return (
@@ -156,16 +156,6 @@ export default function Dashboard({
                         Periode: {period.from} t/m {period.to}
                     </p>
                 </div>
-            </div>
-
-            <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <StatCard label="Tesla (14 dagen)" value={summary.total} accent />
-                <StatCard label="NL personenauto's (14 dagen)" value={summary.totalNl} />
-                <StatCard
-                    label="Tesla marktaandeel (14 dagen)"
-                    value={formatPercent(summary.marketShare)}
-                    suffix="%"
-                />
             </div>
 
             <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
