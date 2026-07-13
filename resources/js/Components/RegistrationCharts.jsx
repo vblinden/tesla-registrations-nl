@@ -12,7 +12,7 @@ import {
     YAxis,
 } from 'recharts';
 import { useChartTheme } from '../lib/chartTheme';
-import { getColorHex, MODEL_COLORS, getVariantHex } from '../lib/chartUtils';
+import { formatNumber, formatPercent, getColorHex, getVariantHex, MODEL_COLORS } from '../lib/chartUtils';
 
 function ChartTooltip({ active, payload, label, chartTheme }) {
     if (!active || !payload?.length) {
