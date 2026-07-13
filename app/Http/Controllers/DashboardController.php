@@ -34,28 +34,6 @@ class DashboardController extends Controller
             ->get()
             ->keyBy(fn ($record) => $record->registration_date->toDateString());
 
-        $teslaByDate = collect($dateRange)->mapWithKeys(function (string $date) use ($registrations) {
-            return [
-                $date => $registrations
-                    ->filter(fn ($record) => $record->registration_date->toDateString() === $date)
-                    ->sum('count'),
-            ];
-        });
-
-        $dailyMarket = collect($dateRange)->map(function (string $date) use ($nationalTotals, $teslaByDate) {
-            $totalNl = $nationalTotals->get($date)?->total_count ?? 0;
-            $totalTesla = $teslaByDate->get($date, 0);
-            $share = $totalNl > 0 ? round(($totalTesla / $totalNl) * 100, 1) : 0;
-
-            return [
-                'date' => $date,
-                'label' => Carbon::parse($date)->locale('nl')->isoFormat('D MMM'),
-                'totalNl' => $totalNl,
-                'totalTesla' => $totalTesla,
-                'share' => $share,
-            ];
-        })->values()->all();
-
         $colors = $registrations->pluck('color')->unique()->sort()->values()->all();
         $variants = $registrations->pluck('variant')->unique()->sort()->values()->all();
         $models = $registrations->pluck('model')->unique()->sort()->values()->all();
@@ -125,7 +103,6 @@ class DashboardController extends Controller
             'dailyByModelDetail' => $dailyByModelDetail,
             'dailyByModelVariant' => $dailyByModelVariant,
             'dailyByModel' => $dailyByModel,
-            'dailyMarket' => $dailyMarket,
             'colors' => $colors,
             'variants' => $variants,
             'variantSummary' => $variantSummary,

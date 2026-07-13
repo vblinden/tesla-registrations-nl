@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ColorStackedChart, MarketComparisonChart, ModelLineChart, VariantStackedChart } from '../Components/RegistrationCharts';
+import { ColorStackedChart, ModelLineChart, VariantStackedChart } from '../Components/RegistrationCharts';
 import AppLayout from '../Layouts/AppLayout';
 import { formatDateTime, formatNumber, formatPercent, TRACKED_MODELS } from '../lib/chartUtils';
 
@@ -78,7 +78,6 @@ export default function Dashboard({
     dailyByModelDetail,
     dailyByModelVariant,
     dailyByModel,
-    dailyMarket,
     colors,
     variants,
     variantSummary,
@@ -189,10 +188,6 @@ export default function Dashboard({
                     subtitle={chartSubtitle}
                 />
                 <ModelLineChart dailyByModel={dailyByModel} models={models} />
-            </div>
-
-            <div className="mt-6">
-                <MarketComparisonChart data={dailyMarket} />
             </div>
 
             <div className="mt-6 rounded-2xl border border-border bg-surface p-6">

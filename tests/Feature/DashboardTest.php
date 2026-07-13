@@ -30,7 +30,6 @@ it('renders the dashboard', function () {
         ->has('dailyByModelDetail')
         ->has('dailyByModelVariant')
         ->has('variantSummary')
-        ->has('dailyMarket', 14)
         ->has('summary')
     );
 });
