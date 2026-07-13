@@ -3,15 +3,16 @@
 namespace App\Services;
 
 use App\Models\DailyRegistrationTotal;
+use App\Models\SyncState;
 use App\Models\TeslaRegistration;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class RegistrationSyncService
 {
     public function __construct(
         private readonly RdwApiService $rdwApi,
+        private readonly SyncMetadataService $syncMetadata,
     ) {}
 
     public function sync(int $days = 14): int
@@ -44,7 +45,7 @@ class RegistrationSyncService
             }
         });
 
-        $this->storeSyncTimestamps();
+        $this->syncMetadata->recordSyncTimestamps();
 
         return count($aggregated);
     }
@@ -54,27 +55,21 @@ class RegistrationSyncService
         $datasetUpdatedAt = $this->rdwApi->getDatasetUpdatedAt();
 
         if ($datasetUpdatedAt === null) {
+            $this->syncMetadata->ensureMetadataIsCurrent();
+
             return null;
         }
 
-        $lastKnownUpdate = Cache::get('rdw_dataset_updated_at');
+        $datasetIso = $datasetUpdatedAt->toIso8601String();
+        $lastKnownUpdate = SyncState::getValue(SyncMetadataService::DATASET_UPDATED_AT);
 
-        if ($lastKnownUpdate === $datasetUpdatedAt->toIso8601String()) {
+        if ($lastKnownUpdate === $datasetIso) {
+            $this->syncMetadata->ensureMetadataIsCurrent($datasetIso);
+
             return null;
         }
 
         return $this->sync($days);
-    }
-
-    private function storeSyncTimestamps(): void
-    {
-        Cache::put('rdw_last_synced_at', now()->toIso8601String());
-
-        $datasetUpdatedAt = $this->rdwApi->getDatasetUpdatedAt();
-
-        if ($datasetUpdatedAt !== null) {
-            Cache::put('rdw_dataset_updated_at', $datasetUpdatedAt->toIso8601String());
-        }
     }
 
     /**

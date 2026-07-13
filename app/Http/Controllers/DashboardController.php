@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DailyRegistrationTotal;
 use App\Models\TeslaRegistration;
+use App\Services\SyncMetadataService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,7 +13,7 @@ class DashboardController extends Controller
 {
     private const array TRACKED_MODELS = ['MODEL Y', 'MODEL 3', 'MODEL S', 'MODEL X'];
 
-    public function index(): Response
+    public function index(SyncMetadataService $syncMetadata): Response
     {
         $days = 14;
         $from = Carbon::today()->subDays($days - 1);
@@ -102,8 +102,8 @@ class DashboardController extends Controller
             'colors' => $colors,
             'models' => $models,
             'summary' => $summary,
-            'lastSyncedAt' => Cache::get('rdw_last_synced_at'),
-            'rdwDataUpdatedAt' => Cache::get('rdw_dataset_updated_at'),
+            'lastSyncedAt' => $syncMetadata->getLastSyncedAt(),
+            'rdwDataUpdatedAt' => $syncMetadata->getDatasetUpdatedAt(),
             'period' => [
                 'from' => $from->toDateString(),
                 'to' => $to->toDateString(),

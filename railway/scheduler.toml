@@ -1,5 +1,5 @@
 [deploy]
-startCommand = "php artisan rdw:sync-registrations"
+startCommand = "chmod +x ./railway/scheduler-start.sh && ./railway/scheduler-start.sh"
 cronSchedule = "*/15 * * * *"
 restartPolicyType = "NEVER"
 
